@@ -9,11 +9,11 @@ type Storage interface {
 }
 
 type boltStorage struct {
-	db bolt.DB
+	db *bolt.DB
 }
 
-func NewStorage(fname string) (*Storage, error) {
-	db, err := bolt.Open(fname, 0666)
+func NewStorage(fname string) (Storage, error) {
+	db, err := bolt.Open(fname, 0666, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -23,10 +23,7 @@ func NewStorage(fname string) (*Storage, error) {
 func (s *boltStorage) Get(key []byte) ([]byte, error) {
 	var res []byte
 	if err := s.db.View(func(tx *bolt.Tx) error {
-		b, err := tx.Bucket([]byte("contacts"))
-		if err != nil {
-			return err
-		}
+		b := tx.Bucket([]byte("contacts"))
 		res = b.Get(key)
 		return nil
 	}); err != nil {
