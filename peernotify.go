@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/yurizhykin/peernotify/api"
 )
 
 func main() {
-	fmt.Println("Starting peernotify server...")
-	api.APIServe(2701)
-	http.ListenAndServe(":2701", nil)
+	addr := ":2701"
+	apiServer := api.NewAPIServer(addr)
+	fmt.Printf("Starting peernotify server at %s\n", addr)
+	apiServer.ListenAndServe()
 }
