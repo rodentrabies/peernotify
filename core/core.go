@@ -1,10 +1,13 @@
 package core
 
-import "github.com/yurizhykin/peernotify/crypto"
+import (
+	"github.com/yurizhykin/peernotify/crypto"
+	"github.com/yurizhykin/peernotify/pb"
+)
 
 // Put user data into temporary storage and send verification link
 // to the email supplied with data
-func (n *PeernotifyNode) Register(contact Contact) error {
+func (n *PeernotifyNode) Register(contact pb.Contact) error {
 	return nil
 }
 
