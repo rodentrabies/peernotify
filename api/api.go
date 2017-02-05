@@ -1,15 +1,15 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/yurizhykin/peernotify/core"
 )
 
 const (
-	API_PREFIX  = "/api/"
-	API_VERSION = "v1"
+	API_PREFIX  = "" // "/api/"
+	API_VERSION = "" // "v1"
 )
 
 func NewAPIServer(node *core.PeernotifyNode, addr string) http.Server {
@@ -17,7 +17,6 @@ func NewAPIServer(node *core.PeernotifyNode, addr string) http.Server {
 }
 
 type apiHandler struct {
-	*http.ServeMux
 	node *core.PeernotifyNode
 }
 
@@ -26,22 +25,33 @@ func (h *apiHandler) apiHandle(path string, handler func(http.ResponseWriter, *h
 }
 
 func newAPIHandler(node *core.PeernotifyNode) *apiHandler {
-	h := &apiHandler{http.NewServeMux(), node}
-	h.apiHandle("/register", handleRegister)
-	h.apiHandle("/verify", handleVerify)
-	h.apiHandle("/forward", handleForward)
+	h := &apiHandler{node}
 	return h
 }
 
-// Handlers
-func handleRegister(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Register at %s", r.URL.Path)
+func (h *apiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	u, err := url.Parse(r.URL.Path)
+	path := u.String()
+	switch r.Method {
+	case "GET":
+		h.get(path, w, r)
+	case "POST":
+		h.post(path, w, r)
+	case "PUT":
+		h.put(path, w, r)
+	case "DELETE":
+		h.del(path, w, r)
+	case "PATCH":
+		h.patch(path, w, r)
+	default:
+		return
+	}
 }
 
-func handleVerify(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Verify at %s", r.URL.Path)
+func (h *apiHandler) GETRegister(w http.ResponseWriter, r *http.Request) {
+	return
 }
 
-func handleForward(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Forward at %s", r.URL.Path)
+func (h *apiHandler) GETVerify(w http.ResponseWriter, r *http.Request) {
+	return
 }
