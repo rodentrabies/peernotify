@@ -1,6 +1,8 @@
 package core
 
 import (
+	"log"
+
 	"github.com/yurizhykin/peernotify/crypto"
 	"github.com/yurizhykin/peernotify/pb"
 )
@@ -8,6 +10,7 @@ import (
 // Put user data into temporary storage and send verification link
 // to the email supplied with data
 func (n *PeernotifyNode) Register(contact pb.Contact) error {
+	log.Printf("Registering %+v", contact)
 	return nil
 }
 
