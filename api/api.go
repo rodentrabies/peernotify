@@ -17,6 +17,7 @@ func NewAPIServer(node *core.PeernotifyNode, addr string) http.Server {
 }
 
 type apiHandler struct {
+	mux  map[string]func(http.ResponseWriter, *http.Request)
 	node *core.PeernotifyNode
 }
 
@@ -25,33 +26,37 @@ func (h *apiHandler) apiHandle(path string, handler func(http.ResponseWriter, *h
 }
 
 func newAPIHandler(node *core.PeernotifyNode) *apiHandler {
-	h := &apiHandler{node}
+	mux = map[string]func(http.ResponseWriter, *http.Request){
+		"/register": h.handleRegister,
+		"/verify":   h.handleVerify,
+		"/forward":  h.handleForward,
+	}
+	h := &apiHandler{mux, node}
 	return h
 }
 
 func (h *apiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	u, err := url.Parse(r.URL.Path)
-	path := u.String()
-	switch r.Method {
-	case "GET":
-		h.get(path, w, r)
-	case "POST":
-		h.post(path, w, r)
-	case "PUT":
-		h.put(path, w, r)
-	case "DELETE":
-		h.del(path, w, r)
-	case "PATCH":
-		h.patch(path, w, r)
-	default:
+	if err != nil {
 		return
 	}
+	// TODO: unify path string
+	path := u.String()
+	h.mux[path](w, r)
 }
 
-func (h *apiHandler) GETRegister(w http.ResponseWriter, r *http.Request) {
-	return
+func apiErrorResponse(w http.ResponseWriter, r *http.Request) {
+	http.NotFound(w, r)
 }
 
-func (h *apiHandler) GETVerify(w http.ResponseWriter, r *http.Request) {
-	return
+func (h *apiHandler) handleRegister(http.ResponseWriter, *http.Request) {
+	apiErrorResponse(w, r)
+}
+
+func (h *apiHandler) handleVerify(http.ResponseWriter, *http.Request) {
+	apiErrorResponse(w, r)
+}
+
+func (h *apiHandler) handleForward(http.ResponseWriter, *http.Request) {
+	apiErrorResponse(w, r)
 }
