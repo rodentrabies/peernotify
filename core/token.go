@@ -1,4 +1,4 @@
-package crypto
+package core
 
 type KeyPair struct {
 	// privkey []byte
@@ -9,4 +9,6 @@ func NewKeyPair() KeyPair {
 	return KeyPair{}
 }
 
-type Token struct{}
+type Token struct {
+	Key []byte
+}

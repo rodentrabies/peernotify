@@ -3,6 +3,7 @@ package core
 import (
 	"log"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/yurizhykin/peernotify/crypto"
 	"github.com/yurizhykin/peernotify/pb"
 )
@@ -11,6 +12,7 @@ import (
 // to the email supplied with data
 func (n *PeernotifyNode) Register(contact pb.Contact) error {
 	log.Printf("Registering %+v", contact)
+	contactBytes, err := proto.Marshal(contact)
 	return nil
 }
 
