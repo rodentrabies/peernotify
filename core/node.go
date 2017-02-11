@@ -22,6 +22,9 @@ func NewPeernotifyNode(storefile string) (*PeernotifyNode, error) {
 
 func (n *PeernotifyNode) storeContact(contact *pb.Contact) ([]byte, error) {
 	contactBytes, err := proto.Marshal(contact)
+	if err != nil {
+		return nil, err
+	}
 	contactKey := ContactKey(contactBytes)
 	if err := n.Storage.Store(contactKey, contactBytes); err != nil {
 		return nil, err
@@ -37,5 +40,4 @@ func (n *PeernotifyNode) getContact(key []byte) (*pb.Contact, error) {
 		return nil, err
 	}
 	return &contact, nil
-
 }

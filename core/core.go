@@ -3,6 +3,7 @@ package core
 import (
 	"log"
 
+	"github.com/yurizhykin/peernotify/core/notifiers"
 	"github.com/yurizhykin/peernotify/pb"
 )
 
@@ -26,5 +27,6 @@ func (n *PeernotifyNode) Forward(token Token, msg []byte) error {
 		return err
 	}
 	notif := notifiers.New(contact)
-	return notif.Forward(msg)
+	notif.Forward(msg)
+	return nil
 }
