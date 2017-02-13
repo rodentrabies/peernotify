@@ -1,0 +1,12 @@
+syntax = "proto3";
+package pb;
+
+// Message consists of token, which was given to the peer and a payload.
+// Token is used to lookup contact data and is cryptographic core of the
+// forwarding mechanism. Payload is an optional block of text to be
+// forwarded along with peernotify ping message.
+message Message {
+  string token   = 1;
+  string payload = 2;
+}
+
