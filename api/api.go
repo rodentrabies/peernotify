@@ -23,9 +23,6 @@ func NewAPIServer(node *core.PeernotifyNode, addr string) http.Server {
 	h.GET("/verify", h.Verify)
 	h.POST("/forward", h.Forward)
 
-	// Debug/test API handlers
-	// h.GET("/user", h.user)
-
 	return http.Server{Addr: addr, Handler: h}
 }
 
@@ -48,6 +45,15 @@ func (h *apiHandler) Verify(w http.ResponseWriter, r *http.Request, _ r.Params) 
 }
 
 func (h *apiHandler) Forward(w http.ResponseWriter, r *http.Request, _ r.Params) {
+	var message pb.Message
+	if err := jsonpb.Unmarshal(r.Body, &message); err != nil {
+		apiWrongBody(w, r)
+		return
+	}
+	if err := h.node.Forward(message); err != nil {
+		apiInternalError(w, r)
+		return
+	}
 
 }
 
