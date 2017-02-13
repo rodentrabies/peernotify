@@ -7,10 +7,12 @@ Package pb is a generated protocol buffer package.
 
 It is generated from these files:
 	contact.proto
+	message.proto
 
 It has these top-level messages:
 	Contact
 	Method
+	Message
 */
 package pb
 
