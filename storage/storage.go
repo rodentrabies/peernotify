@@ -17,6 +17,12 @@ func NewStorage(fname string) (Storage, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("contacts"))
+		return err
+	}); err != nil {
+		return nil, err
+	}
 	return &boltStorage{db: db}, nil
 }
 
@@ -34,11 +40,7 @@ func (s *boltStorage) Get(key []byte) ([]byte, error) {
 
 func (s *boltStorage) Store(key []byte, data []byte) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte("contacts"))
-		if err != nil {
-			return err
-		}
-		return b.Put(key, data)
+		return tx.Bucket([]byte("contacts")).Put(key, data)
 	})
 }
 
