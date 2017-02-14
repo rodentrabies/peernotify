@@ -2,9 +2,9 @@ package core
 
 import (
 	"crypto/rand"
-	"encoding/base64"
 	"log"
 
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/yurizhykin/peernotify/core/notifiers"
 	"github.com/yurizhykin/peernotify/pb"
 )
@@ -14,8 +14,12 @@ import (
 
 // Put user data into temporary storage and send verification link
 // to the email supplied with data
-func (n *PeernotifyNode) Register(contact pb.Contact) error {
-	log.Printf("Registering %+v", contact)
+func (n *PeernotifyNode) Register(contact pb.Contact, url string) error {
+	log.Printf(
+		"Registering contact \"%s\" (mail: %s)",
+		contact.Pubkey,
+		contact.Email.Address,
+	)
 	// Generate random secure key
 	tmpKey, err := randBytes(32)
 	if err != nil {
@@ -26,9 +30,9 @@ func (n *PeernotifyNode) Register(contact pb.Contact) error {
 		return err
 	}
 	// Encode random key to URL Base 64 string
-	idString := base64.URLEncoding.EncodeToString(tmpKey)
+	idString := base58.Encode(tmpKey)
 	// Send verification request
-	if err := sendVerificationRequest(contact, idString); err != nil {
+	if err := sendVerificationRequest(contact, idString, url); err != nil {
 		return err
 	}
 	return nil
@@ -36,19 +40,22 @@ func (n *PeernotifyNode) Register(contact pb.Contact) error {
 
 // Move user data at 'vid' key in temporary data storage to main storage
 func (n *PeernotifyNode) Verify(vid string) error {
-	log.Printf("Verified contact %+v", vid)
+	log.Printf("Verifying contact randID \"%s\"\n", vid)
 	// Decode key string
-	tmpKey, err := base64.URLEncoding.DecodeString(vid)
-	if err != nil {
-		return err
-	}
+	tmpKey := base58.Decode(vid)
 	// Lookup contact by ID key
 	contact, err := n.getPendingContact(tmpKey)
 	if err != nil {
 		return err
 	}
+	log.Printf(
+		"Storing contact \"%s\" (mail: %s)",
+		contact.Pubkey,
+		contact.Email.Address,
+	)
 	// Create permanent key
-	permKey := make([]byte, 32)
+	// NOTE: for testing purposes, currently use Contact.Pubkey
+	permKey := []byte(contact.Pubkey)
 	// Store contact data in permanent storage
 	if err := n.saveContact(permKey, contact); err != nil {
 		return err
@@ -59,32 +66,36 @@ func (n *PeernotifyNode) Verify(vid string) error {
 // Lookup user by token and forward message via medium marked as desired
 func (n *PeernotifyNode) Forward(message pb.Message) error {
 	// Decode token
-	token, err := base64.StdEncoding.DecodeString(message.Token)
-	if err != nil {
-		return err
-	}
+	token := []byte(message.Token)
+	// if err != nil {
+	// 	return err
+	// }
 	// Get contact from storage
 	contact, err := n.getContact(token)
 	if err != nil {
 		return err
 	}
-	log.Printf("Forwarding message %+v to contact %+v", message, contact)
+	log.Printf(
+		"Forwarding message \"%s\" to contact \"%s\"\n",
+		message.Payload,
+		contact.Pubkey,
+	)
 	// Create notifiers
 	notif := notifiers.New(contact)
-	// Decode message payload
-	payload, err := base64.StdEncoding.DecodeString(message.Payload)
-	if err != nil {
-		return err
-	}
 	// Forward message
-	notif.Forward(payload)
+	notifiers.Forward(notif, message.Payload)
+
+	log.Println("Done forwarding...")
 	return nil
 }
 
 //------------------------------------------------------------------------------
 // Utils
 
-func sendVerificationRequest(contact pb.Contact, vid string) error {
+func sendVerificationRequest(contact pb.Contact, vid, url string) error {
+	notifier := notifiers.New(&contact)
+	note := "To confirm this notification method, please visit"
+	notifier.Notify(note + " " + url + "/" + vid + "\n")
 	return nil
 }
 

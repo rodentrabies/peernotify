@@ -39,12 +39,12 @@ func NewPeernotifyNode(storefile string) (*PeernotifyNode, error) {
 
 // Store contact data in temporary storage
 func (n *PeernotifyNode) registerContact(key []byte, contact *pb.Contact) error {
-	return storeContact(n.Contacts, key, contact)
+	return storeContact(n.Pending, key, contact)
 }
 
 // Store contact data in permanent storage after verification
 func (n *PeernotifyNode) saveContact(key []byte, contact *pb.Contact) error {
-	return storeContact(n.Pending, key, contact)
+	return storeContact(n.Contacts, key, contact)
 }
 
 func storeContact(st storage.Storage, key []byte, contact *pb.Contact) error {

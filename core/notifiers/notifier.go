@@ -3,7 +3,7 @@ package notifiers
 import "github.com/yurizhykin/peernotify/pb"
 
 type Notifier interface {
-	Forward([]byte)
+	Notify(string)
 }
 
 type notifierList struct {
@@ -11,24 +11,28 @@ type notifierList struct {
 }
 
 func New(contact *pb.Contact) Notifier {
+	// Configure SMTP
 	smtpConf := smtpConfig{
-		Host:     "localhost",
-		Port:     "25",
+		Host:     "0.0.0.0",
+		Port:     "1025",
 		Addr:     "test@test.org",
 		Username: "user",
 		Password: "password",
 	}
-	return &notifierList{
-		[]Notifier{
-			// SMTP notifier
-			&smtpNotifier{smtpConf, contact.Email.Address},
-			// TODO: add more later
-		},
+	notifiers := []Notifier{
+		// SMTP notifier
+		&smtpNotifier{smtpConf, contact.Email.Address},
+	}
+	return &notifierList{notifiers}
+}
+
+func (nlist *notifierList) Notify(msg string) {
+	for _, notif := range nlist.list {
+		notif.Notify(msg)
 	}
 }
 
-func (nlist *notifierList) Forward(msg []byte) {
-	for _, notif := range nlist.list {
-		notif.Forward(msg)
-	}
+func Forward(notif Notifier, msg string) {
+	note := "Forwarding message:\n\n"
+	notif.Notify(note + msg)
 }

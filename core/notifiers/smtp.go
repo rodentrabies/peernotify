@@ -15,10 +15,10 @@ type smtpNotifier struct {
 	Email string
 }
 
-func (n *smtpNotifier) Forward(msg []byte) {
+func (n *smtpNotifier) Notify(msg string) {
 	auth := smtp.PlainAuth("", n.Conf.Username, n.Conf.Password, n.Conf.Host)
-	hostAddr := n.Conf.Host + ":" + n.Conf.Port
-	err := smtp.SendMail(hostAddr, auth, n.Conf.Addr, []string{n.Email}, msg)
+	addr := n.Conf.Host + ":" + n.Conf.Port
+	err := smtp.SendMail(addr, auth, n.Conf.Addr, []string{n.Email}, []byte(msg))
 	if err != nil {
 		panic(err.Error())
 	}
