@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/golang/protobuf/jsonpb"
@@ -29,12 +30,16 @@ func NewAPIServer(node *core.PeernotifyNode, addr string) http.Server {
 //------------------------------------------------------------------------------
 // API handlers
 func (h *apiHandler) Register(w http.ResponseWriter, r *http.Request, _ r.Params) {
+	// Decode
 	var contact pb.Contact
 	if err := jsonpb.Unmarshal(r.Body, &contact); err != nil {
 		apiWrongBody(w, r)
 		return
 	}
-	if err := h.node.Register(contact); err != nil {
+	// Get server URL to expect verification at
+	url := r.Host + "/verify"
+	// Run registration process
+	if err := h.node.Register(contact, url); err != nil {
 		apiInternalError(w, r)
 		return
 	}
@@ -53,6 +58,7 @@ func (h *apiHandler) Forward(w http.ResponseWriter, r *http.Request, _ r.Params)
 		return
 	}
 	if err := h.node.Forward(message); err != nil {
+		log.Println(err.Error())
 		apiInternalError(w, r)
 		return
 	}
