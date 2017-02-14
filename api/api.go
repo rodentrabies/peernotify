@@ -20,7 +20,7 @@ func NewAPIServer(node *core.PeernotifyNode, addr string) http.Server {
 
 	// Register API handlers
 	h.POST("/register", h.Register)
-	h.GET("/verify", h.Verify)
+	h.GET("/verify/:id", h.Verify)
 	h.POST("/forward", h.Forward)
 
 	return http.Server{Addr: addr, Handler: h}
@@ -40,8 +40,10 @@ func (h *apiHandler) Register(w http.ResponseWriter, r *http.Request, _ r.Params
 	}
 }
 
-func (h *apiHandler) Verify(w http.ResponseWriter, r *http.Request, _ r.Params) {
-
+func (h *apiHandler) Verify(w http.ResponseWriter, r *http.Request, ps r.Params) {
+	if err := h.node.Verify(ps.ByName("id")); err != nil {
+		apiInternalError(w, r)
+	}
 }
 
 func (h *apiHandler) Forward(w http.ResponseWriter, r *http.Request, _ r.Params) {
@@ -59,10 +61,6 @@ func (h *apiHandler) Forward(w http.ResponseWriter, r *http.Request, _ r.Params)
 
 //------------------------------------------------------------------------------
 // HTTP error responses
-func apiWrongMethod(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, fmt.Sprintf("Unable to %s", r.Method), 405)
-}
-
 func apiWrongBody(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, fmt.Sprintf("Malformed body"), 400)
 }
