@@ -37,7 +37,7 @@ func (h *apiHandler) Register(w http.ResponseWriter, r *http.Request, _ r.Params
 		return
 	}
 	// Get server URL to expect verification at
-	url := r.Host + "/verify"
+	url := "http://" + r.Host + "/verify/"
 	// Run registration process
 	if err := h.node.Register(contact, url); err != nil {
 		apiInternalError(w, r)

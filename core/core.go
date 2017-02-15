@@ -2,6 +2,7 @@ package core
 
 import (
 	"crypto/rand"
+	"fmt"
 	"log"
 
 	"github.com/btcsuite/btcutil/base58"
@@ -94,8 +95,10 @@ func (n *PeernotifyNode) Forward(message pb.Message) error {
 
 func sendVerificationRequest(contact pb.Contact, vid, url string) error {
 	notifier := notifiers.New(&contact)
-	note := "To confirm this notification method, please visit"
-	notifier.Notify(note + " " + url + "/" + vid + "\n")
+	link := url + vid
+	aref := fmt.Sprintf("<a href=\"%s\">%s</a>", link, link)
+	note := "To confirm this notification method, please visit " + aref
+	notifier.Notify("Peernotify Verification", note)
 	return nil
 }
 
