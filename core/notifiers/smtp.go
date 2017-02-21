@@ -1,6 +1,9 @@
 package notifiers
 
-import "net/smtp"
+import (
+	"log"
+	"net/smtp"
+)
 
 type smtpConfig struct {
 	Host     string
@@ -26,6 +29,6 @@ func (n *smtpNotifier) Notify(subj, msg string) {
 		msg + "\r\n"
 	err := smtp.SendMail(addr, auth, n.Conf.Addr, []string{n.Email}, []byte(head))
 	if err != nil {
-		panic(err.Error())
+		log.Printf("[ERROR] Failed to send SMTP notification")
 	}
 }

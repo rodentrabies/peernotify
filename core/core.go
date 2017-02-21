@@ -85,8 +85,6 @@ func (n *PeernotifyNode) Forward(message pb.Message) error {
 	notif := notifiers.New(contact)
 	// Forward message
 	notifiers.Forward(notif, message.Payload)
-
-	log.Println("Done forwarding...")
 	return nil
 }
 
