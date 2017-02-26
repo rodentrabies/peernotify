@@ -37,16 +37,53 @@ turn can use them to both pay the service and send ping messages.
 - Register
 - Verify
 - Forward
+
 Register and Verify functions are meant for client and represent two phases
 of registration process, while Forward is an endpoint for pers
 
-#### Registration
+### Registration
 To register, user must submit his *contact* data to the service. This can be
-done via JSON API or via webform.
+done via JSON API or via webform. Contact data is simply a list of tuples of
+the form `(<medium>, <address>)`, where `<medium>` is a short string that 
+describes some common communication protocol, like SMTP or Signal, and 
+`<address>` is an abstract identifier of the user within that protocol, like
+actual email address or phone number, for SMTP or Signal respectively.
 
-#### Verification
+Example of contact data in JSON format:
+```json
+{
+    "methods": [
+        {
+            "id":   "smtp",
+            "addr": "me.here@example.net"
+        },
+        {
+            "id":   "signal",
+            "addr": "+380930000000"
+        }
+    ]
+}
+```
 
-#### Forwarding
+After contact data is submitted, it is placed in a temporary data storage and
+verification requests are sent to each of the addresses according to the 
+specified protocols. From now on contact data is invalid until verified.
+
+### Verification
+Verification process must be performed by the user to confirm that for each 
+identifier and communication protocol specified, it truly belongs to him 
+(we suppose that immediate access to the communication system under that 
+identifier is a sufficient confirmation). Verification is done via requesting
+the user to perform an HTTP request (with GET method) to the specific path at
+the service's verification endpoint. Path consists of verification dispatch
+subpath and a string that encodes a randomly generated 256-bit key in a 
+*base58* encoding. Temporary data storage maps this key to the contact data
+and once HTTP request is performed, data at that key is moved to permanent
+storage and at this point it becomes valid and can be used to forward ping
+messages.
+
+
+### Forwarding
 
 
 ## Analysis
