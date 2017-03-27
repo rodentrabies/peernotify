@@ -1,24 +1,32 @@
 package tokens
 
-import "github.com/yurizhykin/monujo"
-
 // High-level description of the cryptographic part of the
 // Peernotify protocol
 
-type Pubkey monujo.Pubkey
-type Privkey monujo.Privkey
+type Pubkey []byte
+type Privkey []byte
 
-type UserID Pubkey
+type IdKey Pubkey
+
+type KeySet interface {
+	Pub(int) (Pubkey, error)
+	Priv(int) (Pubkey, error)
+	Id() IdKey
+}
+
+type B58Stringer interface {
+	B58String() string
+}
 
 type Token struct {
 	OneTimeKey Pubkey
-	UserIdKey  Pubkey
+	UserIdKey  IdKey
 	UserSecret []byte
 }
 
 type TokenManager interface {
 	NewContactKey() (Privkey, Pubkey, Privkey, Pubkey, error)
-	VerifyToken(token *Token) (UserID, error)
+	VerifyToken(token *Token) IdKey
 }
 
 type PNClient interface {
