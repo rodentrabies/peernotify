@@ -34,6 +34,9 @@ type PeernotifyNode struct {
 	// Permanent contacts storage. Contact data is moved here after
 	// confirmation and all lookups are made in this storage.
 	Contacts storage.Storage
+
+	// Keystore stores keysets that are used in protocol implementation.
+	Keystore storage.Storage
 }
 
 func NewPeernotifyNode(storefile string) (*PeernotifyNode, error) {
@@ -51,11 +54,16 @@ func NewPeernotifyNode(storefile string) (*PeernotifyNode, error) {
 	if err != nil {
 		return nil, err
 	}
+	keyStore, err := storage.NewStorage("/tmp/peernotify.keystore")
+	if err != nil {
+		return nil, err
+	}
 	return &PeernotifyNode{
 		// KeyPair:  keys,
 		TokenManager: tokenManager,
 		Pending:      pendingStore,
 		Contacts:     contactStore,
+		Keystore:     keysStore,
 	}, nil
 }
 
@@ -67,6 +75,17 @@ func (n *PeernotifyNode) registerContact(key []byte, contact *pb.Contact) error 
 // Store contact data in permanent storage after verification
 func (n *PeernotifyNode) saveContact(key []byte, contact *pb.Contact) error {
 	return storeContact(n.Contacts, key, contact)
+}
+
+func (n *PeernotifyNode) saveKeyset(key []byte, keyset *tokens.Keyset) error {
+	var binbuf bytes.Buffer
+	if err := binary.Write(&buf, binary.BigEndian, *keyset); err != nil {
+		return err
+	}
+	if err := n.Keystore.Store(key, binbuf.Bytes()); err != nil {
+		return err
+	}
+	return nil
 }
 
 func storeContact(st storage.Storage, key []byte, contact *pb.Contact) error {
@@ -89,6 +108,10 @@ func (n *PeernotifyNode) getPendingContact(key []byte) (*pb.Contact, error) {
 		return nil, err
 	}
 	return &contact, nil
+}
+
+func (n *PeernotifyNode) deletePendingContact(key []byte) error {
+	return n.Pending.Delete(key)
 }
 
 // Get contact data from permanent storage

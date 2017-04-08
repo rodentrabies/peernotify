@@ -54,14 +54,27 @@ func (n *PeernotifyNode) Verify(vid string) error {
 		contact.Pubkey,
 		contact.Email.Address,
 	)
+	// --------------------------------------------------------------------
+	// Protocol-dependent implementation details
+	// TODO: abstract out into interface-based model
+	// --------------------------------------------------------------------
 	// Create permanent key
-	// NOTE: for testing purposes, currently use Contact.Pubkey
-	permKey := []byte(contact.Pubkey)
+	keyset, err := n.TokenManager.NewContactKey()
+	if err != nil {
+		return err
+	}
+	a, b, A, B := keyset.PrivA, keyset.PrivB, keyset.PubA, keyset.PubB
+	permKey := B
 	// Store contact data in permanent storage
 	if err := n.saveContact(permKey, contact); err != nil {
 		return err
 	}
-	return nil
+	// Store keyset data in key storage
+	if err := n.saveKeyset(permKey, keyset); err != nil {
+		return err
+	}
+	// --------------------------------------------------------------------
+	return n.deletePendingContact(tmpKey)
 }
 
 // Lookup user by token and forward message via medium marked as desired

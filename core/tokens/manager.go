@@ -13,16 +13,16 @@ func NewTokenManager() (*TokenManager, error) {
 	return &cnTokenManager{wallet: wallet}, nil
 }
 
-func (tm *cnTokenManager) NewContactKey() (Privkey, Pubkey, Privkey, Pubkey, error) {
+func (tm *cnTokenManager) NewContactKey() (*Keyset, error) {
 	a, A, err := monujo.NewKeyPair()
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, err
 	}
 	b, B, err := monujo.NewKeyPair()
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, err
 	}
-	return a, A, b, B, nil
+	return &Keyset{a, b, A, B}, nil
 }
 
 func (tm *cnTokenManager) VerifyToken(token *Token) IdKey {

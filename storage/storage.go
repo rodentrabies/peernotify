@@ -5,6 +5,7 @@ import "github.com/boltdb/bolt"
 type Storage interface {
 	Get(key []byte) ([]byte, error)
 	Store(key []byte, data []byte) error
+	Delete(key []byte) error
 	Close() error
 }
 
@@ -41,6 +42,12 @@ func (s *boltStorage) Get(key []byte) ([]byte, error) {
 func (s *boltStorage) Store(key []byte, data []byte) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		return tx.Bucket([]byte("contacts")).Put(key, data)
+	})
+}
+
+func (s *boltStorage) Delete(key []byte) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket([]byte("contacts")).Delete(key)
 	})
 }
 
