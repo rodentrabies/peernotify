@@ -1,6 +1,6 @@
 package notifiers
 
-import "github.com/yurizhykin/peernotify/pb"
+import "github.com/mrwhythat/peernotify/pb"
 
 type Notifier interface {
 	Notify(subj, msg string)

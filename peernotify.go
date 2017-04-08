@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/yurizhykin/peernotify/api"
-	"github.com/yurizhykin/peernotify/core"
+	"github.com/mrwhythat/peernotify/api"
+	"github.com/mrwhythat/peernotify/core"
 )
 
 func main() {

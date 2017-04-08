@@ -1,6 +1,6 @@
 package tokens
 
-import "github.com/yurizhykin/monujo"
+import "github.com/mrwhythat/monujo"
 
 // cnTokenManager is a wrapper around CryptoNight cryptocurrency wallet
 type cnTokenManager struct {

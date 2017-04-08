@@ -6,8 +6,8 @@ import (
 	"log"
 
 	"github.com/btcsuite/btcutil/base58"
-	"github.com/yurizhykin/peernotify/core/notifiers"
-	"github.com/yurizhykin/peernotify/pb"
+	"github.com/mrwhythat/peernotify/core/notifiers"
+	"github.com/mrwhythat/peernotify/pb"
 )
 
 //------------------------------------------------------------------------------

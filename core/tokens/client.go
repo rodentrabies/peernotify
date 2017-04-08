@@ -1,6 +1,6 @@
 package tokens
 
-import "github.com/yurizhykin/monujo"
+import "github.com/mrwhythat/monujo"
 
 // cnPNClient is a client adhering to the CryptoNote-based peernotify protocol
 type cryptoNoteClient struct{}

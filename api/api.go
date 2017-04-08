@@ -7,8 +7,8 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 	r "github.com/julienschmidt/httprouter"
-	"github.com/yurizhykin/peernotify/core"
-	"github.com/yurizhykin/peernotify/pb"
+	"github.com/mrwhythat/peernotify/core"
+	"github.com/mrwhythat/peernotify/pb"
 )
 
 type apiHandler struct {

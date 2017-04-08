@@ -1,10 +1,13 @@
 package core
 
 import (
+	"bytes"
+	"encoding/binary"
+
 	"github.com/golang/protobuf/proto"
-	"github.com/yurizhykin/peernotify/core/tokens"
-	"github.com/yurizhykin/peernotify/pb"
-	"github.com/yurizhykin/peernotify/storage"
+	"github.com/mrwhythat/peernotify/core/tokens"
+	"github.com/mrwhythat/peernotify/pb"
+	"github.com/mrwhythat/peernotify/storage"
 )
 
 type PeernotifyNode struct {
