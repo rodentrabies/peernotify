@@ -1,9 +1,6 @@
 package core
 
 import (
-	"bytes"
-	"encoding/binary"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/mrwhythat/peernotify/core/tokens"
 	"github.com/mrwhythat/peernotify/pb"
@@ -11,19 +8,9 @@ import (
 )
 
 type PeernotifyNode struct {
-	// // Pair of keys used to communicate/authenticate
-	// // peernotify node.
-	// KeyPair KeyPair
-
-	// HD wallet is used as payment tracking and as base of
-	// forwarding protocol. Each client is assigned new public key
-	// from HD tree and client tokens are generated as stealth addresses.
-	// Forwarding is done by sending a service-fee microtransaction
-	// to the that address and using it as forwarding token to send a
-	// ping message, which is verified in blockchain to be the only
-	// payment to that address. After that, lookup is done to retrieve
-	// user data and forward the message.
-	TokenManager *tokens.TokenManager
+	// TokenManager is an interface for generating/verifying
+	// cryptographic tokens
+	TokenManager tokens.TokenManager
 
 	// Storage for unconfirmed contacts key-value pairs of
 	// the form [<random key> -> <contact data>]. When contact
@@ -34,9 +21,6 @@ type PeernotifyNode struct {
 	// Permanent contacts storage. Contact data is moved here after
 	// confirmation and all lookups are made in this storage.
 	Contacts storage.Storage
-
-	// Keystore stores keysets that are used in protocol implementation.
-	Keystore storage.Storage
 }
 
 func NewPeernotifyNode(storefile string) (*PeernotifyNode, error) {
@@ -103,14 +87,13 @@ func (n *PeernotifyNode) deletePendingContact(key []byte) error {
 }
 
 // Get contact data from permanent storage
-// NOTE: should implement cryptographic mechanism of token generation
 func (n *PeernotifyNode) getContact(key []byte) (*pb.Contact, error) {
 	contactBytes, err := n.Contacts.Get(key)
-	var contact pb.Contact
-	proto.Unmarshal(contactBytes, &contact)
 	if err != nil {
 		return nil, err
 	}
+	var contact pb.Contact
+	proto.Unmarshal(contactBytes, &contact)
 	return &contact, nil
 }
 

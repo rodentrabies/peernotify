@@ -16,11 +16,7 @@ import (
 // Put user data into temporary storage and send verification link
 // to the email supplied with data
 func (n *PeernotifyNode) Register(contact pb.Contact, url string) error {
-	log.Printf(
-		"Registering contact \"%s\" (mail: %s)",
-		contact.Pubkey,
-		contact.Email.Address,
-	)
+	log.Printf("Registering contact \"%s\"\n", contact.Pubkey)
 	// Generate random secure key
 	tmpKey, err := randBytes(32)
 	if err != nil {
@@ -33,9 +29,7 @@ func (n *PeernotifyNode) Register(contact pb.Contact, url string) error {
 	// Encode random key to URL Base 64 string
 	idString := base58.Encode(tmpKey)
 	// Send verification request
-	if err := sendVerificationRequest(contact, idString, url); err != nil {
-		return err
-	}
+	sendVerificationRequest(&contact, idString, url)
 	return nil
 }
 
@@ -49,15 +43,7 @@ func (n *PeernotifyNode) Verify(vid string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf(
-		"Storing contact \"%s\" (mail: %s)",
-		contact.Pubkey,
-		contact.Email.Address,
-	)
-	// --------------------------------------------------------------------
-	// Protocol-dependent implementation details
-	// TODO: abstract out into interface-based model
-	// --------------------------------------------------------------------
+	log.Printf("Storing contact \"%s\"\n", contact.Pubkey)
 	// Create permanent key
 	permKey, keyset, err := n.TokenManager.NewKeyset()
 	if err != nil {
@@ -67,44 +53,46 @@ func (n *PeernotifyNode) Verify(vid string) error {
 	if err := n.saveContact(permKey, contact); err != nil {
 		return err
 	}
-	// --------------------------------------------------------------------
-	return n.deletePendingContact(tmpKey)
+	if err := n.deletePendingContact(tmpKey); err != nil {
+		return err
+	}
+	sendContactKeyset(contact, base58.Encode(keyset))
+	return nil
 }
 
 // Lookup user by token and forward message via medium marked as desired
 func (n *PeernotifyNode) Forward(message pb.Message) error {
 	// Decode token
-	token := []byte(message.Token)
-	// if err != nil {
-	// 	return err
-	// }
-	// Get contact from storage
-	contact, err := n.getContact(token)
+	token := base58.Decode(message.Token)
+	permKey, err := n.TokenManager.Generator(token)
 	if err != nil {
 		return err
 	}
-	log.Printf(
-		"Forwarding message \"%s\" to contact \"%s\"\n",
-		message.Payload,
-		contact.Pubkey,
-	)
-	// Create notifiers
-	notif := notifiers.New(contact)
+	contact, err := n.getContact(permKey)
+	if err != nil {
+		return err
+	}
+	log.Printf("Forwarding to \"%s\"\n", message.Payload, contact.Pubkey)
 	// Forward message
-	notifiers.Forward(notif, message.Payload)
+	notifiers.Forward(notifiers.New(contact), message.Payload)
 	return nil
 }
 
 //------------------------------------------------------------------------------
 // Utils
 
-func sendVerificationRequest(contact pb.Contact, vid, url string) error {
-	notifier := notifiers.New(&contact)
+func sendVerificationRequest(contact *pb.Contact, vid, url string) {
 	link := url + vid
 	aref := fmt.Sprintf("<a href=\"%s\">%s</a>", link, link)
 	note := "To confirm this notification method, please visit " + aref
-	notifier.Notify("Peernotify Verification", note)
-	return nil
+	notifiers.New(contact).Notify("Peernotify Verification", note)
+}
+
+func sendContactKeyset(contact *pb.Contact, keyset string) {
+	keyform := fmt.Sprintf("Your Peernotify root key is \"%s\".\n", keyset)
+	warn := "It is used to generate all your contact tokens. Keep it safe."
+	text := keyform + warn
+	notifiers.New(contact).Notify("Peernotify Root Key", text)
 }
 
 func randBytes(size int) ([]byte, error) {
