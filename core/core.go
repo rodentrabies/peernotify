@@ -59,18 +59,12 @@ func (n *PeernotifyNode) Verify(vid string) error {
 	// TODO: abstract out into interface-based model
 	// --------------------------------------------------------------------
 	// Create permanent key
-	keyset, err := n.TokenManager.NewContactKey()
+	permKey, keyset, err := n.TokenManager.NewKeyset()
 	if err != nil {
 		return err
 	}
-	a, b, A, B := keyset.PrivA, keyset.PrivB, keyset.PubA, keyset.PubB
-	permKey := B
 	// Store contact data in permanent storage
 	if err := n.saveContact(permKey, contact); err != nil {
-		return err
-	}
-	// Store keyset data in key storage
-	if err := n.saveKeyset(permKey, keyset); err != nil {
 		return err
 	}
 	// --------------------------------------------------------------------
