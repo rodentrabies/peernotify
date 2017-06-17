@@ -7,7 +7,7 @@ import (
 
 func TestCopying(t *testing.T) {
 	rawTS := []byte{0, 1, 1, 0, 0, 1}
-	ts := newTokenSet(rawTS)
+	ts := NewTokenSet(rawTS)
 	rawTS[3] = 1
 	if bytes.Equal([]byte(ts), []byte{0, 1, 1, 1, 0, 1}) {
 		t.Error()
@@ -17,8 +17,8 @@ func TestCopying(t *testing.T) {
 func TestAddStart(t *testing.T) {
 	rawTS := []byte{0, 1, 1, 0, 0, 1}
 	expTS := []byte{1, 1, 1, 0, 0, 1}
-	ts := newTokenSet(rawTS)
-	newTS := ts.addAt(0)
+	ts := NewTokenSet(rawTS)
+	newTS := ts.AddAt(0)
 	if !bytes.Equal([]byte(newTS), expTS) {
 		t.Error()
 	}
@@ -27,8 +27,8 @@ func TestAddStart(t *testing.T) {
 func TestAddInner(t *testing.T) {
 	rawTS := []byte{0, 1, 1, 0, 0, 1}
 	expTS := []byte{0, 1, 1, 1, 0, 1}
-	ts := newTokenSet(rawTS)
-	newTS := ts.addAt(3)
+	ts := NewTokenSet(rawTS)
+	newTS := ts.AddAt(3)
 	if !bytes.Equal([]byte(newTS), expTS) {
 		t.Error()
 	}
@@ -37,8 +37,8 @@ func TestAddInner(t *testing.T) {
 func TestAddAfter(t *testing.T) {
 	rawTS := []byte{0, 1, 1}
 	expTS := []byte{0, 1, 1, 0, 0, 1}
-	ts := newTokenSet(rawTS)
-	newTS := ts.addAt(5)
+	ts := NewTokenSet(rawTS)
+	newTS := ts.AddAt(5)
 	if !bytes.Equal([]byte(newTS), expTS) {
 		t.Error()
 	}
@@ -47,8 +47,8 @@ func TestAddAfter(t *testing.T) {
 func TestAddRightAfter(t *testing.T) {
 	rawTS := []byte{0, 1, 1}
 	expTS := []byte{0, 1, 1, 1}
-	ts := newTokenSet(rawTS)
-	newTS := ts.addAt(3)
+	ts := NewTokenSet(rawTS)
+	newTS := ts.AddAt(3)
 	if !bytes.Equal([]byte(newTS), expTS) {
 		t.Error()
 	}
@@ -56,16 +56,16 @@ func TestAddRightAfter(t *testing.T) {
 
 func TestGetAt(t *testing.T) {
 	rawTS := []byte{0, 1, 1, 0}
-	ts := newTokenSet(rawTS)
-	if !(!ts.getAt(0) && ts.getAt(1) && ts.getAt(2) && !ts.getAt(3)) {
+	ts := NewTokenSet(rawTS)
+	if !(!ts.GetAt(0) && ts.GetAt(1) && ts.GetAt(2) && !ts.GetAt(3)) {
 		t.Error()
 	}
 }
 
 func TestGetAfter(t *testing.T) {
 	rawTS := []byte{0, 1, 1, 0}
-	ts := newTokenSet(rawTS)
-	if !(!ts.getAt(4) && !ts.getAt(8)) {
+	ts := NewTokenSet(rawTS)
+	if !(!ts.GetAt(4) && !ts.GetAt(8)) {
 		t.Error()
 	}
 }
@@ -73,8 +73,8 @@ func TestGetAfter(t *testing.T) {
 func TestDropStart(t *testing.T) {
 	rawTS := []byte{1, 1, 1, 0, 1, 0, 1}
 	expTS := []byte{1, 1, 1, 0, 1, 0, 1}
-	ts := newTokenSet(rawTS)
-	newTS := ts.dropUntil(0)
+	ts := NewTokenSet(rawTS)
+	newTS := ts.DropUntil(0)
 	if !bytes.Equal([]byte(newTS), expTS) {
 		t.Error()
 	}
@@ -83,8 +83,8 @@ func TestDropStart(t *testing.T) {
 func TestDropUntilInner(t *testing.T) {
 	rawTS := []byte{1, 1, 1, 0, 1, 0, 1}
 	expTS := []byte{1, 0, 1, 0, 1}
-	ts := newTokenSet(rawTS)
-	newTS := ts.dropUntil(2)
+	ts := NewTokenSet(rawTS)
+	newTS := ts.DropUntil(2)
 	if !bytes.Equal([]byte(newTS), expTS) {
 		t.Error()
 	}
@@ -93,8 +93,8 @@ func TestDropUntilInner(t *testing.T) {
 func TestDropUntilAfter(t *testing.T) {
 	rawTS := []byte{1, 1, 1, 0, 1, 0, 1}
 	expTS := []byte{}
-	ts := newTokenSet(rawTS)
-	newTS := ts.dropUntil(10)
+	ts := NewTokenSet(rawTS)
+	newTS := ts.DropUntil(10)
 	if !bytes.Equal([]byte(newTS), expTS) {
 		t.Error()
 	}
@@ -103,8 +103,8 @@ func TestDropUntilAfter(t *testing.T) {
 func TestDropUntilRightAfter(t *testing.T) {
 	rawTS := []byte{1, 1, 1, 0, 1, 0, 1}
 	expTS := []byte{1}
-	ts := newTokenSet(rawTS)
-	newTS := ts.dropUntil(6)
+	ts := NewTokenSet(rawTS)
+	newTS := ts.DropUntil(6)
 	if !bytes.Equal([]byte(newTS), expTS) {
 		t.Error()
 	}
