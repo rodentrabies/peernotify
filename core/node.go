@@ -1,6 +1,8 @@
 package core
 
 import (
+	"path"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/mrwhythat/peernotify/core/tokens"
 	"github.com/mrwhythat/peernotify/pb"
@@ -23,18 +25,18 @@ type PeernotifyNode struct {
 	Contacts storage.Storage
 }
 
-func NewPeernotifyNode(storefile string) (*PeernotifyNode, error) {
+func NewPeernotifyNode(storeDir string) (*PeernotifyNode, error) {
 	// keys := NewKeyPair()
 	// TODO: move into one storage (?)
-	tokenManager, err := tokens.NewTokenManager()
+	tokenManager, err := tokens.NewTokenManager(storeDir)
 	if err != nil {
 		return nil, err
 	}
-	pendingStore, err := storage.NewStorage("/tmp/peernotify.pending")
+	pendingStore, err := storage.NewStorage(path.Join(storeDir, "peernotify.pending"))
 	if err != nil {
 		return nil, err
 	}
-	contactStore, err := storage.NewStorage(storefile)
+	contactStore, err := storage.NewStorage(path.Join(storeDir, "peernotify.contacts"))
 	if err != nil {
 		return nil, err
 	}

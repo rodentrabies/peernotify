@@ -10,7 +10,7 @@ import (
 func main() {
 	// Config
 	addr := ":2701"
-	store := "/tmp/peernotify.db"
+	store := "/home/whythat/.peernotify"
 
 	// Setup
 	node, err := core.NewPeernotifyNode(store)
