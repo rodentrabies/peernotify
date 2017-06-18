@@ -34,4 +34,13 @@ func TestSimpleTokenManager(t *testing.T) {
 	if err == nil {
 		t.Error("Repeated usage")
 	}
+	keySet = token
+	token, err = tc.NewToken(keySet)
+	if err != nil {
+		t.Error("Generating 2nd token")
+	}
+	generator, err = tm.Generator(token)
+	if err != nil {
+		t.Error("Getting 2nd generator")
+	}
 }

@@ -5,10 +5,10 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"errors"
-	"fmt"
 	"math"
 	"path"
 
+	base58 "github.com/jbenet/go-base58"
 	"github.com/mrwhythat/peernotify/storage"
 )
 
@@ -17,8 +17,12 @@ import (
 //
 // High-level description of the cryptographic part of the Peernotify protocol
 
-type B58Stringer interface {
-	B58String() string
+// type B58Stringer interface {
+// 	B58String() string
+// }
+
+func b58String(data []byte) string {
+	return base58.Encode(data)
 }
 
 type Token struct {
@@ -79,12 +83,10 @@ func (tm *simpleTokenManager) NewKeyset() ([]byte, []byte, error) {
 	if _, err := rand.Read(rootKey); err != nil {
 		return nil, nil, RandError
 	}
-	keySet := append(idKey, rootKey...)
-	if err := tm.keys.Store(idKey, keySet); err != nil {
+	if err := tm.keys.Store(idKey, rootKey); err != nil {
 		return nil, nil, err
 	}
-	fmt.Printf("id: %v\nroot: %v\n", idKey, keySet)
-	return idKey, keySet, nil
+	return idKey, append(idKey, rootKey...), nil
 }
 
 func (tm *simpleTokenManager) Generator(tokenBytes []byte) ([]byte, error) {
@@ -99,6 +101,7 @@ func (tm *simpleTokenManager) Generator(tokenBytes []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	var found bool
 	tokenSet := NewTokenSet(rawTokenSet)
 	for i := 0; i < MaxTokens; i++ {
 		chainLink = sha256.Sum256(chainLink[:])
@@ -106,7 +109,8 @@ func (tm *simpleTokenManager) Generator(tokenBytes []byte) ([]byte, error) {
 			if tokenSet.GetAt(i) {
 				return nil, IncorrectTokenError
 			}
-			tokenSet.AddAt(i)
+			tokenSet = tokenSet.AddAt(i)
+			found = true
 			break
 		}
 	}
@@ -117,8 +121,11 @@ func (tm *simpleTokenManager) Generator(tokenBytes []byte) ([]byte, error) {
 	}
 	tm.keys.Store(idKey, chainLink[:])
 	tm.tokens.Store(idKey, tokenSet.DropUntil(i))
-	// fmt.Printf("idKey: %v\n", idKey)
-	return idKey, nil
+	if found {
+		return idKey, nil
+	} else {
+		return nil, IncorrectTokenError
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -132,7 +139,6 @@ func NewPeernotifyClient() (PeernotifyClient, error) {
 
 func (*simpleClient) NewToken(keyset []byte) ([]byte, error) {
 	idKey, rootKey := keyset[:IDSize], keyset[IDSize:]
-	fmt.Println(idKey, rootKey)
 	chainLink := sha256.Sum256(rootKey)
 	return append(idKey, chainLink[:]...), nil
 }
