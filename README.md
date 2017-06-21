@@ -51,18 +51,16 @@ actual email address or phone number, for SMTP or Signal respectively.
 
 Example of contact data in JSON format:
 ```json
-{
-    "methods": [
-        {
-            "id":   "smtp",
-            "addr": "me.here@example.net"
-        },
-        {
-            "id":   "signal",
-            "addr": "+380930000000"
-        }
-    ]
-}
+[
+    {
+        "id":   "smtp",
+        "addr": "me.here@example.net"
+    },
+    {
+        "id":   "signal",
+        "addr": "+380930000000"
+    }
+]
 ```
 
 After contact data is submitted, it is placed in a temporary data storage and
@@ -84,13 +82,17 @@ messages.
 
 
 ### Forwarding
+TODO
 
 
 ## Analysis
+TODO
 
 ## Conclusion
+TODO
 
 ## References
+TODO
 
 
 [1]: https://ipfs.io/
