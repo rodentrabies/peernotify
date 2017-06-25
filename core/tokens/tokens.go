@@ -8,23 +8,11 @@ import (
 	"math"
 	"path"
 
-	base58 "github.com/jbenet/go-base58"
 	"github.com/mrwhythat/peernotify/storage"
 )
 
 //------------------------------------------------------------------------------
 // Model
-//
-// High-level description of the cryptographic part of the Peernotify protocol
-
-// type B58Stringer interface {
-// 	B58String() string
-// }
-
-func b58String(data []byte) string {
-	return base58.Encode(data)
-}
-
 type Token struct {
 	OneTimeKey []byte
 	UserIdKey  []byte
@@ -32,9 +20,8 @@ type Token struct {
 }
 
 type TokenManager interface {
-	// Returns binary representation of the set of keys needed for
-	// Peernotify protocol and ID key, which can be used to index keyset
-	// in storage
+	// Returns binary representation of the set of keys and ID key
+	// which can be used to index keyset in storage
 	NewKeyset() ([]byte, []byte, error)
 
 	// Returns ID key of the keyset that generated given token
@@ -42,15 +29,19 @@ type TokenManager interface {
 }
 
 type PeernotifyClient interface {
-	NewToken(keyset []byte) ([]byte, error)
+	// Generate new token based on the keyset
+	NewToken() ([]byte, error)
 }
 
-const TokenSize = 32
+const (
+	IDSize    = 8
+	KeySize   = 32
+	MaskSize  = 32
+	TokenSize = 40
+	MaxTokens = math.MaxInt16
+)
 
 var (
-	IDSize    = 32
-	MaxTokens = math.MaxInt16
-
 	RandError           = errors.New("Ur randomz numbez iz broken, mate!")
 	IncorrectTokenError = errors.New("Incorrect token")
 )
@@ -75,37 +66,62 @@ func NewTokenManager(storeDir string) (TokenManager, error) {
 }
 
 func (tm *simpleTokenManager) NewKeyset() ([]byte, []byte, error) {
-	idKey := make([]byte, IDSize)
-	if _, err := rand.Read(idKey); err != nil {
+	id := make([]byte, IDSize)
+	if _, err := rand.Read(id); err != nil {
 		return nil, nil, RandError
 	}
-	rootKey := make([]byte, TokenSize)
-	if _, err := rand.Read(rootKey); err != nil {
+	key := make([]byte, KeySize)
+	if _, err := rand.Read(key); err != nil {
 		return nil, nil, RandError
 	}
-	if err := tm.keys.Store(idKey, rootKey); err != nil {
+	mask := make([]byte, MaskSize)
+	if _, err := rand.Read(mask); err != nil {
+		return nil, nil, RandError
+	}
+	rootKeyset := append(key, mask...)
+	if err := tm.keys.Store(id, rootKeyset); err != nil {
 		return nil, nil, err
 	}
-	return idKey, append(idKey, rootKey...), nil
+	return id, append(id, rootKeyset...), nil
 }
 
 func (tm *simpleTokenManager) Generator(tokenBytes []byte) ([]byte, error) {
-	idKey, token := tokenBytes[:IDSize], tokenBytes[IDSize:]
-	rootKey, err := tm.keys.Get(idKey)
+	// Break raw token bytes into ID and token data
+	id, token := tokenBytes[:IDSize], tokenBytes[IDSize:]
+	// 	fmt.Printf(`
+	//      vid: %s
+	// `, base58.Encode(id))
+	// Get root keyset for ID
+	rootKeyset, err := tm.keys.Get(id)
 	if err != nil {
 		return nil, err
 	}
-	var chainLink [TokenSize]byte
-	copy(chainLink[:], rootKey)
-	rawTokenSet, err := tm.tokens.Get(idKey)
+	// Get token set for ID
+	rawTokenSet, err := tm.tokens.Get(id)
 	if err != nil {
 		return nil, err
 	}
-	var found bool
 	tokenSet := NewTokenSet(rawTokenSet)
+	// Break root keyset into pieces
+	var (
+		key  [KeySize]byte
+		mask [MaskSize]byte
+		link [MaskSize]byte
+	)
+	// Check token
+	copy(key[:], rootKeyset[:KeySize])
+	copy(mask[:], rootKeyset[KeySize:])
+	// 	fmt.Printf(`
+	//     vkey: %s
+	//    vmask: %s
+	// `, base58.Encode(key[:]), base58.Encode(mask[:]))
+	xorBytes(link[:], key[:], mask[:])
+	var found bool
 	for i := 0; i < MaxTokens; i++ {
-		chainLink = sha256.Sum256(chainLink[:])
-		if bytes.Equal(chainLink[:], token) {
+		key = sha256.Sum256(key[:])
+		mask = sha256.Sum256(mask[:])
+		xorBytes(link[:], key[:], mask[:])
+		if bytes.Equal(link[:], token) {
 			if tokenSet.GetAt(i) {
 				return nil, IncorrectTokenError
 			}
@@ -114,31 +130,67 @@ func (tm *simpleTokenManager) Generator(tokenBytes []byte) ([]byte, error) {
 			break
 		}
 	}
-	copy(chainLink[:], rootKey)
+	// Remove used tokens from token set
+	copy(key[:], rootKeyset[:KeySize])
+	copy(mask[:], rootKeyset[KeySize:])
+	xorBytes(link[:], key[:], mask[:])
 	var i int
 	for i = 0; tokenSet.GetAt(i); i++ {
-		chainLink = sha256.Sum256(chainLink[:])
+		key = sha256.Sum256(key[:])
+		mask = sha256.Sum256(mask[:])
+		xorBytes(link[:], key[:], mask[:])
 	}
-	tm.keys.Store(idKey, chainLink[:])
-	tm.tokens.Store(idKey, tokenSet.DropUntil(i))
+	// Save new root keyset and tokenset
+	tm.keys.Store(id, append(key[:], mask[:]...))
+	tm.tokens.Store(id, tokenSet.DropUntil(i))
+	// Return ID of the generator
 	if found {
-		return idKey, nil
+		return id, nil
 	} else {
 		return nil, IncorrectTokenError
 	}
 }
 
+func xorBytes(dst, a, b []byte) int {
+	n := len(a)
+	if len(b) < n {
+		n = len(b)
+	}
+	for i := 0; i < n; i++ {
+		dst[i] = a[i] ^ b[i]
+	}
+	return n
+}
+
 //------------------------------------------------------------------------------
 // Simple client implementation
 
-type simpleClient struct{}
-
-func NewPeernotifyClient() (PeernotifyClient, error) {
-	return &simpleClient{}, nil
+type simpleClient struct {
+	keyset []byte
 }
 
-func (*simpleClient) NewToken(keyset []byte) ([]byte, error) {
-	idKey, rootKey := keyset[:IDSize], keyset[IDSize:]
-	chainLink := sha256.Sum256(rootKey)
-	return append(idKey, chainLink[:]...), nil
+func NewPeernotifyClient(keyset []byte) (PeernotifyClient, error) {
+	return &simpleClient{keyset: keyset}, nil
+}
+
+func (client *simpleClient) NewToken() ([]byte, error) {
+	kSet := client.keyset
+	keyEnd := IDSize + KeySize
+	id, key, mask := kSet[:IDSize], kSet[IDSize:keyEnd], kSet[keyEnd:]
+	// 	fmt.Printf(`
+	//       id: %s
+	//      key: %s
+	//     mask: %s
+	// `, base58.Encode(id), base58.Encode(key), base58.Encode(mask))
+	newKey, newMask := sha256.Sum256(key), sha256.Sum256(mask)
+	// 	fmt.Printf(`
+	//  new key: %s
+	// new mask: %s
+	// `, base58.Encode(newKey[:]), base58.Encode(newMask[:]))
+	copy(client.keyset[IDSize:keyEnd], newKey[:])
+	copy(client.keyset[keyEnd:], newMask[:])
+	token := make([]byte, TokenSize)
+	copy(token[:IDSize], id)
+	xorBytes(token[IDSize:], newKey[:], newMask[:])
+	return token, nil
 }
