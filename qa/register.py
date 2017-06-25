@@ -4,9 +4,10 @@ import requests
 import sys
 import json
 
-def pn_register(addr, key, email):
+
+def pn_register(addr, email):
     # construct contact JSON description
-    contact = {"pubkey" : key, "email" : {"address" : email}}
+    contact = {"methods": [{"protocol": "SMTP", "address": email}]}
     # expand URL
     if addr[0] == ':':
         addr = 'http://localhost' + addr
@@ -20,9 +21,9 @@ def pn_register(addr, key, email):
     except Exception as e:
         print('[ERROR]: ' + str(e))
 
+
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 3:
         print('[USAGE]:\n\tregister.py <addr> <key> <email>')
     else:
-        pn_register(sys.argv[1], sys.argv[2], sys.argv[3])
-    
+        pn_register(sys.argv[1], sys.argv[2])
