@@ -16,7 +16,7 @@ import (
 // Put user data into temporary storage and send verification link
 // to the email supplied with data
 func (n *PeernotifyNode) Register(contact pb.Contact, url string) error {
-	log.Printf("Registering contact \"%s\"\n", contact.Pubkey)
+	log.Printf("Registering contact %v", contact)
 	// Generate random secure key
 	tmpKey, err := randBytes(32)
 	if err != nil {
@@ -35,7 +35,6 @@ func (n *PeernotifyNode) Register(contact pb.Contact, url string) error {
 
 // Move user data at 'vid' key in temporary data storage to main storage
 func (n *PeernotifyNode) Verify(vid string) error {
-	log.Printf("Verifying contact randID \"%s\"\n", vid)
 	// Decode key string
 	tmpKey := base58.Decode(vid)
 	// Lookup contact by ID key
@@ -43,7 +42,7 @@ func (n *PeernotifyNode) Verify(vid string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Storing contact \"%s\"\n", contact.Pubkey)
+	log.Printf("Verifying and storing contact %v\n", *contact)
 	// Create permanent key
 	permKey, keyset, err := n.TokenManager.NewKeyset()
 	if err != nil {
@@ -72,7 +71,7 @@ func (n *PeernotifyNode) Forward(message pb.Message) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Forwarding to \"%s\"\n", message.Payload, contact.Pubkey)
+	log.Printf("Forwarding \"%s\" to contact %v\n", message.Payload, *contact)
 	// Forward message
 	notifiers.Forward(notifiers.New(contact), message.Payload)
 	return nil

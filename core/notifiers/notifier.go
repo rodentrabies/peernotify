@@ -19,9 +19,14 @@ func New(contact *pb.Contact) Notifier {
 		Username: "user",
 		Password: "password",
 	}
-	notifiers := []Notifier{
-		// SMTP notifier
-		&smtpNotifier{smtpConf, contact.Email.Address},
+	notifiers := []Notifier{}
+	for _, method := range contact.Methods {
+		var notifier Notifier
+		switch method.Protocol {
+		case "SMTP":
+			notifier = &smtpNotifier{smtpConf, method.Address}
+		}
+		notifiers = append(notifiers, notifier)
 	}
 	return &notifierList{notifiers}
 }
