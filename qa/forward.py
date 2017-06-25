@@ -3,17 +3,19 @@
 import requests
 import sys
 import json
-import base58
+from base58 import b58encode, b58decode
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
 
-IDKEY_SIZE = 32
+ID_SIZE = 8
+KEY_SIZE = 32
+MASK_SIZE = 32
 
 
 def pn_forward(addr, keyset, payload):
     # construct message JSON description
-    token = generate_token(keyset)
+    token, new_keyset = generate_token(keyset)
     message = {"token": token, "payload": payload}
     # expand URL
     if addr[0] == ':':
@@ -24,19 +26,27 @@ def pn_forward(addr, keyset, payload):
     try:
         r = requests.post(url_path, data=json.dumps(message))
         if not r.status_code == 200:
-            print('[ERROR]: ' + r.reason)
+            print('[API ERROR]: ' + r.reason)
         else:
-            print('[TOKEN]: ' + token)
+            print('[NEW KEYSET]: ' + new_keyset)
     except Exception as e:
-        print('[ERROR]: ' + str(e))
+        print('[EXCEPTION]: ' + str(e))
 
 
 def generate_token(keyset):
-    data = base58.b58decode(keyset)
-    id_key, root_key = data[:IDKEY_SIZE], data[IDKEY_SIZE:]
+    data = b58decode(keyset)
+    key_end = ID_SIZE + KEY_SIZE
+    id, key, mask = data[:ID_SIZE], data[ID_SIZE:key_end], data[key_end:]
+    new_key, new_mask = sha256hash(key), sha256hash(mask)
+    token = id + bytes([new_key[i] ^ new_mask[i] for i in range(MASK_SIZE)])
+    new_keyset = id + new_key + new_mask
+    return b58encode(token), b58encode(new_keyset)
+
+
+def sha256hash(data):
     digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
-    digest.update(root_key)
-    return base58.b58encode(id_key + digest.finalize())
+    digest.update(data)
+    return digest.finalize()
 
 
 if __name__ == '__main__':
