@@ -11,21 +11,21 @@ func TestSimpleTokenManager(t *testing.T) {
 		t.Error("Create token manager: %v", err)
 	}
 
-	tc, err := NewPeernotifyClient()
-	if err != nil {
-		t.Error("Create client")
-	}
 	idKey, keySet, err := tm.NewKeyset()
 	if err != nil {
 		t.Error("Generate new keyset")
 	}
-	token, err := tc.NewToken(keySet)
+	tc, err := NewPeernotifyClient(keySet)
+	if err != nil {
+		t.Error("Create client")
+	}
+	token, err := tc.NewToken()
 	if err != nil {
 		t.Error("Generate new token")
 	}
 	generator, err := tm.Generator(token)
 	if err != nil {
-		t.Error("Get generator")
+		t.Errorf("Get generator: %v", err)
 	}
 	if !bytes.Equal(idKey, generator) {
 		t.Error("Wrong IDKey")
@@ -35,12 +35,12 @@ func TestSimpleTokenManager(t *testing.T) {
 		t.Error("Repeated usage")
 	}
 	keySet = token
-	token, err = tc.NewToken(keySet)
+	token, err = tc.NewToken()
 	if err != nil {
 		t.Error("Generating 2nd token")
 	}
 	generator, err = tm.Generator(token)
 	if err != nil {
-		t.Error("Getting 2nd generator")
+		t.Errorf("Getting 2nd generator: %v", err)
 	}
 }
