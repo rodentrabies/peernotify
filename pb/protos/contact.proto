@@ -4,24 +4,14 @@ package pb;
 // Contact contains public key 'pubkey' which is used to build
 // a cryptographic identity inside the system, and notification
 // methods.
-//
-// TODO: currently, only email method is supported, but 'repeated'
-// declaration should be considered, along with changing Method
-// message declaration to be self-descriptive.
 message Contact {
-  string pubkey = 1;
-  Method email  = 2; 
+  repeated Method methods = 1; 
 }
 
 // Method represents notification method or medium and contains
-// abstract address, which is the unique identifier used by the
-// medium to identify a particular entity.
-//
-// TODO: self-desciption should be added to allow Contacts to have
-// multiple notification mechanisms enabled; possibly 'enabled' field
-// can be used to register multiple methods but have only a subset of
-// them activated; also for key-forwarding model, Method should
-// have (<address>, <encryption key>) pairs.
+// protocol identifier and an abstract address, which is the
+// unique entity identifier withing specified protocol medium
 message Method {
-  string address = 1;
+  string protocol = 1;
+  string address  = 2;
 }
