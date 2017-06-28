@@ -7,9 +7,9 @@ of the common services and tools for economic activity. Now, few years after
 distributed hash tables decentralized file sharing and bitcoin decentralized
 money, there are technologies that attempt to decentralize the biggest
 application of the Internet itself: the Web. One of the most interesting
-projects of that kind is [*IPFS*][ipfs] [^1], which combines distributed hash tables
-(*DHT*) like [*Kademlia*][kademlia] [^2] and content-addressed file system like
-[*Git*][git] [^3] to create a global hypermedia environment that is based on
+projects of that kind is [*IPFS*][1] [[1]], which combines distributed hash tables
+(*DHT*) like [*Kademlia*][2] [[2]] and content-addressed file system like
+[*Git*][3] [[3]] to create a global hypermedia environment that is based on
 what it contains and not on who owns it.
 
 An interesting consequence of using *DHT* as transport is persistency of the
@@ -21,7 +21,7 @@ network for an amount of time sufficient to upload new data, thus the name.
 What is even more important is that the owner of such service can develop a
 pseudonymous identity, which hides his personal information while allowing him
 to be a trusted entity on the network. Great example of such system is the
-[*OpenBazaar 2.0*][ob] [^4] platform, which is basically a network of pseudonymous
+[*OpenBazaar 2.0*][4] [[4]] platform, which is basically a network of pseudonymous
 offline (well, not necessarily) stores.
 
 The problem with such design is that it lacks interactivity, which is crucial
@@ -128,12 +128,12 @@ Example of forwarding request data in JSON format:
 TODO
 
 ## References
-[^1]: https://ipfs.io/
-[^2]: https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf
-[^3]: https://git-scm.com/
-[^4]: https://www.openbazaar.org/
+1. https://ipfs.io/
+2. https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf
+3. https://git-scm.com/
+4. https://www.openbazaar.org/
 
-[ipfs]: https://ipfs.io/
-[kademlia]: https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf
-[git]: https://git-scm.com/
-[ob]: https://www.openbazaar.org/
+[1]: https://ipfs.io/
+[2]: https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf
+[3]: https://git-scm.com/
+[4]: https://www.openbazaar.org/
